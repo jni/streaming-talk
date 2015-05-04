@@ -1,11 +1,24 @@
 import networkx as nx
+import toolz as tz
+
+
+@tz.curry
+def add_edges(g_, edges_iter):
+    for e in edges_iter:
+        g_.add_edge(*e)
+    return g_
+
+
+def edge_from_kmer(kmer):
+    return (kmer[:-1], kmer[1:])
+
 
 def eulerian_path(g, algorithm='Fleury'):
     """Return a Eulerian path for the semi-eulerian graph ``g``.
 
     Parameters
     ----------
-    g : nx.DiGraph
+    g : nx.DiGraph, nx.MultiDiGraph
         The input graph. The graph must be semi-Eulerian.
     algorithm : {'Fleury', 'Hierholzer'}, optional
         Which algorithm to use to find the path. Hierholzer is faster
