@@ -47,18 +47,28 @@ Let's take the sum of all even numbers up to 10.
    import toolz as tz
    summed = tz.pipe(range(6), double_all, sum)
 
+# tips
+
+- (list -> return list) becomes (iterator/generator -> yield elem)
+- convert f(a -> return b) to streaming with curried.map(f)
+
 # Bigger example: take PCA from a large dataset
 
 sklearn has `IncrementalPCA` class. But you need to chunk your data yourself.
 
 ```python
+import toolz as tz
+from toolz import curried
 from sklearn import decomposition
+from sklearn import datasets
 import numpy as np
 
 def streaming_pca(samples, n_components=2, batch_size=100):
-    ipca = decomposition.IncrementalPCA(n_components=2, batch_size=batch_size)
-    tz.pipe(samples, tz.curried.partition(batch_size), np.array,
-            ipca.partial_fit)
+    ipca = decomposition.IncrementalPCA(n_components=n_components,
+                                        batch_size=batch_size)
+    _ = list(tz.pipe(samples, curried.partition(batch_size),
+                     curried.map(list), curried.map(np.array),
+                     ipca.partial_fit))
     return ipca
 ```
 
@@ -90,6 +100,22 @@ In genomics, it's important to count the appearance of "k-mers", or bits of
 genetic sequence of length k. This is used heavily, for example, in error
 correction.
 
+```python
+def fa_transform(seq):
+    seq = seq.rstrip()
+    if seq.startswith('>'):
+        return '$'
+    return seq
+
+import glob
+k = 10
+counts = tz.pipe(glob.glob('*.fa'), curried.map(open), tz.concat,  # lines
+                 curried.map(fa_transform),  # discard names, add separator
+                 tz.concat,  # characters
+                 curried.sliding_window(k), curried.map(''.join),  # k-mers
+                 tz.frequencies)
+```
+
 
 # assembly
 
@@ -97,6 +123,31 @@ correction.
 seq = 'ATGGSGTGSA'
 g = nx.DiGraph()
 
-tz.pipe(seq, curried.sliding_window(3), curried.map(eu.edge_from_kmer),
-             eu.add_edges(g), eu.eulerian_path)
+path = tz.pipe(seq, curried.sliding_window(3),
+                    curried.map(''.join),
+                    curried.map(eu.edge_from_kmer),
+                    eu.add_edges(g),
+                    eu.eulerian_path)
+path
+
+p = list(path)
 ```
+
+# tips
+
+- (list of list -> list) with tz.concat
+
+- don't get caught out:
+    - iterators get consumed
+    - iterators are *lazy*; need to force evaluation sometimes.
+
+# in conclusion
+
+- streaming in Python is easy when you use a few abstractions
+- streaming can make you more productive:
+    - big data takes linearly longer than small data (no nasty memory swapping)
+    - don't need a bigger machine
+    - if your tests pass on small data, they'll pass on big data
+- streaming code is concise and readable using toolz (cytoolz for speed)
+
+Read more on Matt Rocklin's blog!
