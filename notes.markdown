@@ -210,9 +210,8 @@ draw_circular = tz.partial(nx.draw_circular, with_labels=True,
                                              node_color='w',
                                              node_size=600)
 reads = generate_reads(seq)
-draw = tz.pipe(reads, curried.interpose(['$']),  # separate the reads
-                      tz.concat, curried.sliding_window(3),  # get 3-mers
-                      curried.filter(lambda x: '$' not in x),  # discard delims
+draw = tz.pipe(reads, curried.map(curried.sliding_window(3)),  # k-mers
+                      tz.concat,  # join k-mer streams from all reads
                       curried.map(''.join),  # make strings from tup of char
                       curried.map(eu.edge_from_kmer),  # get k-1-mer tuples
                       eu.add_edges(g),  # add them as edges to the graph
@@ -234,9 +233,8 @@ def assemble(euler_path):
 
 reads = generate_reads(seq)
 g = nx.DiGraph()
-inferred = tz.pipe(reads, curried.interpose(['$']),  # separate the reads
-                          tz.concat, curried.sliding_window(3),  # get 3-mers
-                          curried.filter(lambda x: '$' not in x), # discard sep
+inferred = tz.pipe(reads, curried.map(curried.sliding_window(3)),  # k-mers
+                          tz.concat,  # join k-mer streams from all reads
                           curried.map(''.join),  # make string from tup of char
                           curried.map(eu.edge_from_kmer),  # get k-1-mer tups
                           eu.add_edges(g),  # add edges to g
