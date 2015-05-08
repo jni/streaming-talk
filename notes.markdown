@@ -155,18 +155,18 @@ genetic sequence of length k. This is used heavily, for example, in error
 correction.
 
 ```python
-def fa_transform(seq):
-    seq = seq.rstrip()
-    if seq.startswith('>'):
-        return '$'
-    return seq
+def fa_filter(sequence_iter):
+    for seq in sequence_iter:
+        if not seq.startswith('>'):
+            yield seq.rstrip()
 
 import glob
 k = 6
 counts = tz.pipe(glob.glob('*.fasta'), curried.map(open), tz.concat,  # lines
-                 curried.map(fa_transform),  # discard names, add separator
-                 tz.concat,  # characters
-                 curried.sliding_window(k), curried.map(''.join),  # k-mers
+                 curried.map(fa_filter),  # discard names
+                 curried.map(curried.sliding_window(k)), apply sliding to each
+                 tz.concat,  # k-mers as char tuples
+                 curried.map(''.join),  # k-mers
                  tz.frequencies)
 
 plt.hist(list(counts.values()), bins=25)
