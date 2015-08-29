@@ -8,7 +8,10 @@ Download the Drosophila genome file from
 [here](http://hgdownload.soe.ucsc.edu/goldenPath/dm6/bigZips/dm6.fa.gz),
 unzip it, and place it in the `data` directory.
 
-If you use Anaconda and Python 3.4, it should just work!
+You also need to download and `python setup.py install` IPython Memory
+Usage from [here](https://github.com/ianozsvald/ipython_memory_usage).
+
+Then, if you use Anaconda and Python 3.4, it should just work!
 
 ### (Given at Melbourne Python Users Group meeting 2015-05-04)
 
